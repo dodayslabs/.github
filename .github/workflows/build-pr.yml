@@ -1,0 +1,46 @@
+name: Build PR
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: linux-arm-runner
+    steps:
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Run composer install
+        run: composer install -n --prefer-dist
+
+      - name: Run npm ci
+        run: npm ci
+
+      - name: Run format action
+        uses: ./.github/actions/format
+
+      - name: Run test action
+        uses: ./.github/actions/test
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: Logs
+          path: ./storage/logs
