@@ -41,10 +41,3 @@ jobs:
 
       - name: Run test action
         uses: ./.github.shared/.github/actions/test
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: Logs
-          path: ./storage/logs
