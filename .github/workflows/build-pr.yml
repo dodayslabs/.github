@@ -2,11 +2,25 @@ name: Build PR
 
 on:
   workflow_call:
+    inputs:
+      slack_webhook:
+        type: string
+        description: "Slack webhook URL"
+        required: false
 
 jobs:
   build:
     name: Build and test
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: testing
+        ports:
+          - 3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
     steps:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -41,6 +55,19 @@ jobs:
 
       - name: Run test action
         uses: ./.github.shared/.github/actions/test
+        env:
+          DB_HOST: "127.0.0.1"
+          DB_PORT: ${{ job.services.mysql.ports[3306] }}
+
+      - name: Send Slack notification
+        if: ${{ inputs.slack_webhook }}
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          author_name: ${{ github.actor }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ inputs.slack_webhook }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Remove shared workflow repository
         run: rm -rf ./.github.shared
