@@ -48,7 +48,7 @@ jobs:
         run: composer install -n --prefer-dist
 
       - name: Run npm ci
-        run: npm ci
+        run: npm ci && npm run build
 
       - name: Run format action
         uses: ./.github.shared/.github/actions/format
