@@ -60,13 +60,13 @@ jobs:
           DB_PORT: ${{ job.services.mysql.ports[3306] }}
 
       - name: Send Slack notification
-        if: ${{ inputs.slack_webhook }}
+        if: ${{ vars.SLACK_WEBHOOK }}
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
           author_name: ${{ github.actor }}
         env:
-          SLACK_WEBHOOK_URL: ${{ inputs.slack_webhook }}
+          SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Remove shared workflow repository
