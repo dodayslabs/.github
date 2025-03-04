@@ -40,7 +40,7 @@ jobs:
       - name: Checkout shared workflow repository
         uses: actions/checkout@v4
         with:
-          repository: doddlesoft/.github
+          repository: dodayslabs/.github
           path: ./.github.shared/
           ref: main
 
