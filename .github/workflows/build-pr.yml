@@ -44,8 +44,13 @@ jobs:
           path: ./.github.shared/
           ref: main
 
+      - name: Configure composer auth
+        run: composer config --global github-oauth.github.com ${{ secrets.COMPOSER_TOKEN }}
+        shell: bash
+
       - name: Run composer install
         run: composer install -n --prefer-dist
+        shell: bash
 
       - name: Run npm ci
         run: npm ci && npm run build
