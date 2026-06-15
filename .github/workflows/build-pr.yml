@@ -73,7 +73,7 @@ jobs:
           DB_PORT: ${{ job.services.postgres.ports['5432'] }}
 
       - name: Send Slack notification
-        if: ${{ vars.SLACK_WEBHOOK }}
+        if: ${{ !cancelled() && vars.SLACK_WEBHOOK }}
         uses: slackapi/slack-github-action@v3
         with:
           webhook: ${{ vars.SLACK_WEBHOOK }}
