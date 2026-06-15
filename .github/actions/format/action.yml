@@ -8,5 +8,5 @@ runs:
       shell: bash
 
     - name: Run eslint
-      run: npm run lint
+      run: pnpm lint
       shell: bash
