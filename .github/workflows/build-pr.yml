@@ -74,12 +74,17 @@ jobs:
 
       - name: Send Slack notification
         if: ${{ vars.SLACK_WEBHOOK }}
-        uses: slackapi/slack-github-action@v2
+        uses: slackapi/slack-github-action@v3
         with:
           webhook: ${{ vars.SLACK_WEBHOOK }}
           webhook-type: incoming-webhook
           payload: |
-            text: "${{ job.status }}: build for ${{ github.repository }} (PR by ${{ github.actor }}) - ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            text: "GitHub Action build result: ${{ job.status }} - ${{ github.repository }} PR #${{ github.event.pull_request.number }}"
+            blocks:
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "*GitHub Action build result: ${{ job.status }}*\n<${{ github.event.pull_request.html_url }}|${{ github.repository }} PR #${{ github.event.pull_request.number }}> by ${{ github.actor }}\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View workflow run>"
 
       - name: Remove shared workflow repository
         run: rm -rf ./.github.shared
