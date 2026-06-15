@@ -28,23 +28,27 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref }}
+
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.5"
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
       - name: Setup node
         uses: actions/setup-node@v6
         with:
-          node-version: 22.20.0
-
-      - name: Checkout repository
-        uses: actions/checkout@v5
-        with:
-          ref: ${{ github.head_ref }}
+          node-version-file: .nvmrc
+          cache: pnpm
 
       - name: Checkout shared workflow repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: dodayslabs/.github
           path: ./.github.shared/
@@ -56,8 +60,8 @@ jobs:
       - name: Run composer install
         run: composer install -n --prefer-dist
 
-      - name: Run npm ci
-        run: npm ci && npm run build
+      - name: Build assets
+        run: pnpm install --frozen-lockfile && pnpm build
 
       - name: Run format action
         uses: ./.github.shared/.github/actions/format
@@ -69,19 +73,23 @@ jobs:
           DB_PORT: ${{ job.services.postgres.ports['5432'] }}
 
       - name: Send Slack notification
-        if: ${{ vars.SLACK_WEBHOOK }}
-        uses: 8398a7/action-slack@v3
+        if: ${{ !cancelled() && vars.SLACK_WEBHOOK }}
+        uses: slackapi/slack-github-action@v3
         with:
-          status: ${{ job.status }}
-          author_name: ${{ github.actor }}
-        env:
-          SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          webhook: ${{ vars.SLACK_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "GitHub Action build result: ${{ job.status }} - ${{ github.repository }} PR #${{ github.event.pull_request.number }}"
+            blocks:
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "*GitHub Action build result: ${{ job.status }}*\n<${{ github.event.pull_request.html_url }}|${{ github.repository }} PR #${{ github.event.pull_request.number }}> by ${{ github.actor }}\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View workflow run>"
 
       - name: Remove shared workflow repository
         run: rm -rf ./.github.shared
 
       - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: Fix styling
