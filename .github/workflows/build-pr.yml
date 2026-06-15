@@ -29,7 +29,7 @@ jobs:
           --health-retries 5
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.head_ref }}
 
@@ -48,7 +48,7 @@ jobs:
           cache: pnpm
 
       - name: Checkout shared workflow repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: dodayslabs/.github
           path: ./.github.shared/
@@ -74,18 +74,17 @@ jobs:
 
       - name: Send Slack notification
         if: ${{ vars.SLACK_WEBHOOK }}
-        uses: 8398a7/action-slack@v3
+        uses: slackapi/slack-github-action@v2
         with:
-          status: ${{ job.status }}
-          author_name: ${{ github.actor }}
-        env:
-          SLACK_WEBHOOK_URL: ${{ vars.SLACK_WEBHOOK }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          webhook: ${{ vars.SLACK_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "${{ job.status }}: build for ${{ github.repository }} (PR by ${{ github.actor }}) - ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
       - name: Remove shared workflow repository
         run: rm -rf ./.github.shared
 
       - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: Fix styling
